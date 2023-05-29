@@ -33,6 +33,38 @@ app.get('/cat-supplies/:id', async (req, res) => {
   }
 });
 
+// This endpoint updates a specific cat supply item by id
+app.put('/cat-supplies/:id', async (req, res) => {
+  const id = req.params.id;
+  const operation = req.body.operation;
+
+  const catSupplyItem = await CatSupply.findById(id);
+
+  if (!catSupplyItem) {
+    res.status(404).send('Item not found');
+  } else {
+    if (operation === 'increment') {
+      catSupplyItem.inventory += 1;
+    } else if (operation === 'decrement') {
+      if (catSupplyItem.inventory > 0) {
+        catSupplyItem.inventory -= 1;
+      } else {
+        return res.status(400).send('Inventory cannot go below zero');
+      }
+    } else {
+      return res.status(400).send('Invalid operation');
+    }
+
+    try {
+      const updatedCatSupplyItem = await catSupplyItem.save();
+      res.json(updatedCatSupplyItem);
+    } catch (err) {
+      res.status(400).send(err);
+    }
+  }
+});
+
+
 app.listen(port, () => {
   console.log(`Cat Store API is listening at http://localhost:${port}`);
 });
